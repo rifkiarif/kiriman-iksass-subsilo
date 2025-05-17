@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Input Data Pengiriman</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+  <h2 class="text-center mb-4">LIST KIRIMAN EKSPEDISI SUB RAYON SILO (BULANAN)</h2>
+  <form id="inputForm" class="needs-validation" novalidate>
+
+    <!-- Jenis Kelamin -->
+    <div class="mb-3">
+      <label class="form-label">Jenis Kelamin</label><br/>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="jk" id="putra" value="PUTRA" required />
+        <label class="form-check-label" for="putra">Putra</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="jk" id="putri" value="PUTRI" required />
+        <label class="form-check-label" for="putri">Putri</label>
+      </div>
+    </div>
+
+    <!-- Nama Santri -->
+    <div class="mb-3">
+      <label for="namaSantri" class="form-label">Nama Santri</label>
+      <input type="text" class="form-control" id="namaSantri" required />
+    </div>
+
+    <!-- Asrama -->
+    <div class="mb-3">
+      <label for="asrama" class="form-label">Asrama</label>
+      <input type="text" class="form-control" id="asrama" required />
+    </div>
+
+    <!-- Jenis Barang -->
+    <div class="mb-3">
+      <label for="barang" class="form-label">Barang yang Dikirim</label>
+      <select class="form-select" id="barang" required>
+        <option value="">Pilih Barang...</option>
+        <option value="1 Kardus">1 Kardus</option>
+        <option value="2 Kardus">2 Kardus</option>
+        <option value="3 Kardus">3 Kardus</option>
+        <option value="Koper">Koper</option>
+        <option value="ATM">ATM</option>
+        <option value="Uang">Uang</option>
+        <option value="Lainnya">Barang Lainnya</option>
+      </select>
+    </div>
+
+    <!-- Barang Lainnya -->
+    <div class="mb-3 d-none" id="lainnyaGroup">
+      <label for="barangLainnya" class="form-label">Sebutkan Barang Lainnya</label>
+      <input type="text" class="form-control" id="barangLainnya" />
+    </div>
+
+    <!-- Alamat -->
+    <div class="mb-3">
+      <label for="alamat" class="form-label">Alamat</label>
+      <textarea class="form-control" id="alamat" rows="3" required></textarea>
+    </div>
+
+    <!-- No HP -->
+    <div class="mb-3">
+      <label for="noHp" class="form-label">No HP / WhatsApp</label>
+      <input type="text" class="form-control" id="noHp" required />
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary w-100">Simpan Data</button>
+  </form>
+</div>
+ <!-- Bootstrap JS (Optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const barangSelect = document.getElementById("barang");
+  const lainnyaGroup = document.getElementById("lainnyaGroup");
+  const barangLainnya = document.getElementById("barangLainnya");
+
+  // Toggle input barang lainnya
+  barangSelect.addEventListener("change", function () {
+    if (this.value === "Lainnya") {
+      lainnyaGroup.classList.remove("d-none");
+      barangLainnya.required = true;
+    } else {
+      lainnyaGroup.classList.add("d-none");
+      barangLainnya.required = false;
+    }
+  });
+
+  // Form submission
+  document.getElementById("inputForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const namaSantri = document.getElementById("namaSantri").value.trim();
+    const noHp = document.getElementById("noHp").value.trim();
+
+    if (!this.checkValidity()) {
+      this.classList.add('was-validated');
+      return;
+    }
+
+    const payload = {
+      jk: document.querySelector('input[name="jk"]:checked').value,
+      namaSantri,
+      asrama: document.getElementById("asrama").value.trim(),
+      barang: barangSelect.value === "Lainnya" ? barangLainnya.value.trim() : barangSelect.value,
+      alamat: document.getElementById("alamat").value.trim(),
+      noHp
+    };
+
+    try {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwpEIodwmHEh4Lah-Jp04FwLWSr-cYDTv9i9qdEmwHVEK-K7DrizsRGgmoLjkctMdci/exec", {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (result.status === 'duplicate') {
+        Swal.fire("Duplikat!", "Data sudah ada.", "warning");
+      } else if (result.status === 'success') {
+        Swal.fire("Berhasil!", "Data berhasil disimpan.", "success").then(() => {
+          document.getElementById("inputForm").reset();
+          lainnyaGroup.classList.add("d-none");
+          barangLainnya.required = false;
+        });
+      } else {
+        Swal.fire("Error", "Gagal menyimpan data.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Terjadi kesalahan saat mengirim data.", "error");
+    }
+  });
+});
+</script>
+
+</body>
+</html>
