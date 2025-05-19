@@ -120,38 +120,38 @@ document.getElementById("inputForm").addEventListener("submit", async function (
     noHp
   };
 
-  try {
-    // Kirim data ke API tanpa mode no-cors
-    const res = await fetch("https://script.google.com/macros/s/AKfycbwrwi69LYBJ6RMs5MDyICmejWehMsGemICmF1RB0cfociVx6QdohFp1Yv4p1o6OuSmv/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+ try {
+  const res = await fetch("https://script.google.com/macros/s/AKfycbwrwi69LYBJ6RMs5MDyICmejWehMsGemICmF1RB0cfociVx6QdohFp1Yv4p1o6OuSmv/exec ", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP error! Status: ${res.status}`);
+  }
+
+  const result = await res.json();
+
+  if (result.status === 'duplicate') {
+    Swal.fire("Duplikat!", "Data sudah ada.", "warning");
+  } else if (result.status === 'success') {
+    Swal.fire("Berhasil!", "Data berhasil disimpan.", "success").then(() => {
+      document.getElementById("inputForm").reset();
+      lainnyaGroup.classList.add("d-none");
+      barangLainnya.required = false;
     });
-
-    // Periksa status HTTP
-    if (!res.ok) {
-      throw new Error(`HTTP error! Status: ${res.status}`);
-    }
-
-    // Baca respons API sebagai JSON
-    const result = await res.json();
-
-    // Tangani respons berdasarkan status
-    if (result.status === 'duplicate') {
-      Swal.fire("Duplikat!", "Data sudah ada.", "warning");
-    } else if (result.status === 'success') {
-      Swal.fire("Berhasil!", "Data berhasil disimpan.", "success").then(() => {
-        document.getElementById("inputForm").reset();
-        lainnyaGroup.classList.add("d-none");
-        barangLainnya.required = false;
-      });
-    } else {
-      Swal.fire("Error", "Gagal menyimpan data.", "error");
-    }
-  } catch (err) {
-    console.error("Error:", err);
+  } else {
+    Swal.fire("Error", "Gagal menyimpan data.", "error");
+  }
+} catch (err) {
+  console.error("Error:", err);
+  if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+    Swal.fire("Error", "Terjadi kesalahan saat menghubungi server. Pastikan URL API benar.", "error");
+  } else {
     Swal.fire("Error", "Terjadi kesalahan: " + err.message, "error");
   }
+}
 });
 });
 </script>
